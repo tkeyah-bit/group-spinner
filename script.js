@@ -1,163 +1,160 @@
-const canvas = document.getElementById("wheel");
-const ctx = canvas.getContext("2d");
-const segments = ["Group A", "Group B", "Group C", "Group D"];
-const colors = ["#ff6b6b", "#6bc5ff", "#51d88a", "#f7d154"];
-const sound = new Audio("ding.mp3");
-let angle = 0;
-let spinning = false;
+// 1) IMPORT & INITIALIZE FIREBASE
+import { initializeApp } from "https://www.gstatic.com/firebasejs/11.7.1/firebase-app.js";
+import {
+  getDatabase,
+  ref,
+  push,
+  onValue,
+  remove
+} from "https://www.gstatic.com/firebasejs/11.7.1/firebase-database.js";
 
-function drawWheel() {
-  const radius = canvas.width / 2;
-  const arc = (2 * Math.PI) / segments.length;
+const firebaseConfig = {
+  apiKey: "AIzaSyCoNi5BAQbqV63OsLvZudBmVKqK1UaGD48",
+  authDomain: "wheel-64111.firebaseapp.com",
+  projectId: "wheel-64111",
+  storageBucket: "wheel-64111.firebasestorage.app",
+  messagingSenderId: "768654812880",
+  appId: "1:768654812880:web:c85461e84ac5460beda0d5",
+  measurementId: "G-GHW299F643"
+};
 
-  for (let i = 0; i < segments.length; i++) {
-    const startAngle = arc * i;
-    const endAngle = startAngle + arc;
+const app = initializeApp(firebaseConfig);
+const db  = getDatabase(app);
+const spinsRef = ref(db, 'spins/');
 
-    ctx.beginPath();
-    ctx.moveTo(radius, radius);
-    ctx.arc(radius, radius, radius, startAngle, endAngle);
-    ctx.fillStyle = colors[i];
-    ctx.fill();
 
-    // text 
-    ctx.save();
-    ctx.translate(radius, radius);
-    ctx.rotate(startAngle + arc / 2);
-    ctx.textAlign = "right";
-    ctx.fillStyle = "#fff";
-    ctx.font = "bold 18px sans-serif";
-    ctx.fillText(segments[i], radius - 10, 10);
-    ctx.restore();
+// 2) ALL YOUR WHEEL LOGIC INSIDE DOMContentLoaded
+document.addEventListener("DOMContentLoaded", () => {
+  const canvas = document.getElementById("wheel");
+  const ctx    = canvas.getContext("2d");
+  const segments = ["Group A", "Group B", "Group C", "Group D"];
+  const colors   = ["#ff6b6b", "#6bc5ff", "#51d88a", "#f7d154"];
+  const sound    = new Audio("ding.mp3");
+  let spinning   = false;
+
+  // DRAW THE WHEEL
+  function drawWheel() {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    const radius = canvas.width / 2;
+    const arc    = (2 * Math.PI) / segments.length;
+
+    segments.forEach((seg, i) => {
+      const start = arc * i;
+      const end   = start + arc;
+      ctx.beginPath();
+      ctx.moveTo(radius, radius);
+      ctx.arc(radius, radius, radius, start, end);
+      ctx.fillStyle = colors[i];
+      ctx.fill();
+
+      ctx.save();
+      ctx.translate(radius, radius);
+      ctx.rotate(start + arc / 2);
+      ctx.textAlign = "right";
+      ctx.fillStyle  = "#fff";
+      ctx.font       = "bold 18px sans-serif";
+      ctx.fillText(seg, radius - 10, 10);
+      ctx.restore();
+    });
   }
-}
 
-function spinWheel() {
-  if (spinning) return;
-  const name = document.getElementById("username").value.trim().toLowerCase();
-
-  if (!name) {
-    alert("Please enter your name.");
-    return;
-  }
-
-  if (localStorage.getItem(`spun-${name}`)) {
-    alert("You've already spun the wheel!");
-    return;
-  }
-
-  spinning = true;
-
-  const spins = Math.floor(Math.random() * 4 + 4); // 4 to 8 spins
-  const randSegment = Math.floor(Math.random() * segments.length);
-  const segmentAngle = 360 / segments.length;
-  const targetAngle = 360 * spins + randSegment * segmentAngle + segmentAngle / 2;
-
-  canvas.style.transition = "transform 9s cubic-bezier(0.33, 1, 0.68, 1)";
-  canvas.style.transform = `rotate(${targetAngle}deg)`;
-
-  setTimeout(() => {
-    const group = segments[randSegment];
-    const resultEl = document.getElementById("result");
-    resultEl.innerText = `${capitalize(name)}, you're in ${group}!`;
-
-    switch (group) {
-      case "Group A": resultEl.style.color = "#ff6b6b"; break;
-      case "Group B": resultEl.style.color = "#6bc5ff"; break;
-      case "Group C": resultEl.style.color = "#51d88a"; break;
-      case "Group D": resultEl.style.color = "#f7d154"; break;
-      default: resultEl.style.color = "#333";
+  // SPIN HANDLER
+  function spinWheel() {
+    if (spinning) return;
+    const name = document.getElementById("username").value.trim().toLowerCase();
+    if (!name) {
+      alert("Please enter your name.");
+      return;
     }
 
-    localStorage.setItem(`spun-${name}`, group);
-    sound.play();
-    spinning = false;
-    updateUserList();
-  }, 9000);
-}
+    spinning = true;
+    const spins      = Math.floor(Math.random() * 4 + 4);
+    const randIndex  = Math.floor(Math.random() * segments.length);
+    const segmentDeg = 360 / segments.length;
+    const targetDeg  = 360 * spins + randIndex * segmentDeg + segmentDeg / 2;
 
-function updateUserList() {
-  const userList = document.getElementById("userList");
-  const groupStats = document.getElementById("groupStats");
-  const spinList = document.getElementById("spinList");
-  const groupCountsBox = document.getElementById("groupCounts");
+    canvas.style.transition = "transform 9s cubic-bezier(0.33,1,0.68,1)";
+    canvas.style.transform  = `rotate(${targetDeg}deg)`;
 
-  userList.innerHTML = "";
-  groupStats.innerHTML = "";
-  spinList.innerHTML = "";
-  groupCountsBox.innerHTML = "";
+    setTimeout(() => {
+      const group = segments[randIndex];
+      const resultEl = document.getElementById("result");
+      resultEl.innerText  = `${capitalize(name)}, you’re in ${group}!`;
+      resultEl.style.color = getGroupColor(group);
+      sound.play();
+      // SAVE TO FIREBASE
+      push(spinsRef, { name, group, timestamp: Date.now() });
+      spinning = false;
+    }, 9000);
+  }
 
-  let entries = [];
-  let groupCounts = { "Group A": 0, "Group B": 0, "Group C": 0, "Group D": 0 };
+  // REAL-TIME LISTENER
+  onValue(spinsRef, snapshot => {
+    const data = snapshot.val() || {};
+    const entries = Object.values(data);
+    const spinList = document.getElementById("spinList");
+    const userList = document.getElementById("userList");
+    const groupStats = document.getElementById("groupStats");
+    const groupCountsEl = document.getElementById("groupCounts");
 
-  Object.keys(localStorage).forEach(key => {
-    if (key.startsWith("spun-")) {
-      const name = key.replace("spun-", "");
-      const group = localStorage.getItem(key);
-      entries.push({ name, group });
-      if (groupCounts[group] !== undefined) {
-        groupCounts[group]++;
-      }
-    }
+    spinList.innerHTML      = "";
+    userList.innerHTML      = "";
+    groupStats.innerHTML    = "";
+    groupCountsEl.innerHTML = "";
+
+    // tally counts
+    const counts = { "Group A":0, "Group B":0, "Group C":0, "Group D":0 };
+
+    // sort by name
+    entries.sort((a,b) => a.name.localeCompare(b.name));
+
+    entries.forEach(({name, group}) => {
+      counts[group]++;
+
+      // spin log
+      const logLi = document.createElement("li");
+      logLi.textContent = `${capitalize(name)} → ${group}`;
+      spinList.appendChild(logLi);
+
+      // user list
+      const uLi = document.createElement("li");
+      uLi.innerHTML = `
+        <span>${capitalize(name)}</span>
+        <span class="group-label group-${group.split(" ")[1]}">${group}</span>
+      `;
+      userList.appendChild(uLi);
+    });
+
+    // group stats & totals
+    Object.entries(counts).forEach(([grp, cnt]) => {
+      groupStats.innerHTML += `<div>${grp}: ${cnt} member${cnt!==1?"s":""}</div>`;
+      const div = document.createElement("div");
+      div.innerHTML = `<span style="color:${getGroupColor(grp)};font-weight:bold">
+                        ${grp}
+                      </span>: ${cnt}`;
+      groupCountsEl.appendChild(div);
+    });
   });
 
-  entries.sort((a, b) => a.name.localeCompare(b.name));
-
-  for (const entry of entries) {
-    const groupClass = "group-" + entry.group.split(" ")[1];
-
-    const li = document.createElement("li");
-    li.innerHTML = `
-      <span>${capitalize(entry.name)}</span>
-      <span class="group-label ${groupClass}">${entry.group}</span>
-    `;
-    userList.appendChild(li);
-
-    const logLi = document.createElement("li");
-    logLi.textContent = `${capitalize(entry.name)} → ${entry.group}`;
-    spinList.appendChild(logLi);
-  }
-
-  for (let group in groupCounts) {
-    const count = groupCounts[group];
-    groupStats.innerHTML += `<div>${group}: ${count} member${count !== 1 ? "s" : ""}</div>`;
-  }
-
-  for (let group in groupCounts) {
-    const count = groupCounts[group];
-    const color = getGroupColor(group);
-    const div = document.createElement("div");
-    div.innerHTML = `<span style="color: ${color}; font-weight: bold;">${group}</span>: ${count}`;
-    groupCountsBox.appendChild(div);
-  }
-}
-
-function getGroupColor(group) {
-  switch (group) {
-    case "Group A": return "#ff6b6b";
-    case "Group B": return "#6bc5ff";
-    case "Group C": return "#51d88a";
-    case "Group D": return "#f7d154";
-    default: return "#333";
-  }
-}
-
-function resetSpins() {
-  if (confirm("Are you sure you want to clear all spins?")) {
-    Object.keys(localStorage).forEach(key => {
-      if (key.startsWith("spun-")) {
-        localStorage.removeItem(key);
-      }
-    });
-    updateUserList();
+  // RESET
+  function resetSpins() {
+    if (!confirm("Clear all spins?")) return;
+    remove(spinsRef);
     document.getElementById("result").innerText = "";
-    alert("Spin records have been cleared.");
   }
-}
 
-function capitalize(text) {
-  return text.charAt(0).toUpperCase() + text.slice(1);
-}
+  // HELPERS
+  function getGroupColor(g) {
+    return {"Group A":"#ff6b6b","Group B":"#6bc5ff","Group C":"#51d88a","Group D":"#f7d154"}[g];
+  }
+  function capitalize(s) {
+    return s.charAt(0).toUpperCase() + s.slice(1);
+  }
 
-drawWheel();
-updateUserList();
+  // expose for inline handlers
+  window.spinWheel  = spinWheel;
+  window.resetSpins = resetSpins;
+
+  // initial draw
+  drawWheel();
+});
