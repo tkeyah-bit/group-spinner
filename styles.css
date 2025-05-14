@@ -1,0 +1,55 @@
+body {
+ font-family: sans-serif;
+ background: #f4f4f9;
+ text-align: center;
+ padding: 20px;
+}
+
+.container{
+ max-width: 600px;
+ margin: auto;
+}
+
+#wheel{
+ width: 100%;
+ height: 100%;
+ border-radius: 50%;
+ border: 10px solid #444;
+ transition: transform 5s cubic-bezier(0.33, 1, 0.68, 1);
+}
+
+#wheel-container{
+ position: relative;
+ width: 500px;
+ height: 500px;
+ margin: 20px auto;
+}
+
+#pointer{
+ position: absolute;
+ top: -30%;
+ left: 50%;
+ transform: translate(-50%);
+ font-size: 2.5rem;
+ color: red;
+ z-index: 10;
+}
+
+#username{
+ padding: 10px;
+ font-size: 1rem;
+ width: 60%;
+ margin-bottom: 10px;
+}
+
+button{
+ padding: 10px 20px;
+ font-size: 1rem;
+ cursor: pointer;
+}
+
+#result{
+ margin-top: 20px;
+ font-size: 1.5rem;
+ font-weight: bold;
+}

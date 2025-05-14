@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+ <meta charset="UTF-8">
+ <meta name="viewport" content="width=device-width, initial-scale=1.0">
+ <title>wheelspin</title>
+ <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+ <div class="container">
+  <h1>Spin the Wheel to Join a Group</h1>
+  <input type="text" id="username" placeholder="Enter Your Name"/>
+  <button onclick="spinWheel()">Spin</button>
+
+  <div class="wheel-container">
+   <canvas id="wheel" width="500" height="500"></canvas>
+   <div id="pointer">&#9650;</div>
+  </div>
+
+  <h2 id="result"></h2>
+ </div>
+ <script src="script.js"></script>
+</body>
+</html>
