@@ -5,8 +5,20 @@
  <meta name="viewport" content="width=device-width, initial-scale=1.0">
  <title>wheelspin</title>
  <link rel="stylesheet" href="styles.css">
+ <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet">
 </head>
 <body>
+ <!-- Top Left: Names and Groups -->
+<div id="spinLog" class="corner-box left-corner">
+ <h4>Spun Users</h4>
+ <ul id="spinList"></ul>
+</div>
+
+<!-- Top Right: Group Counts -->
+<div id="groupCountBox" class="corner-box right-corner">
+ <h4>Group Totals</h4>
+ <div id="groupCounts"></div>
+</div>
  <div class="container">
   <h1>Spin the Wheel to Join a Group</h1>
   <input type="text" id="username" placeholder="Enter Your Name"/>
@@ -14,10 +26,15 @@
 
   <div class="wheel-container">
    <canvas id="wheel" width="500" height="500"></canvas>
-   <div id="pointer">&#9650;</div>
-  </div>
-
+  <div id="pointer">▼</div>
+</div>
   <h2 id="result"></h2>
+  <div class="results-section">
+   <h3>Spun Users by Group</h3>
+   <div id="groupStats"></div>
+   <ul id="userList"></ul>
+   <button id="resetBtn" onclick="resetSpins()">Reset Spins</button>
+ </div>
  </div>
  <script src="script.js"></script>
 </body>
