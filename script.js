@@ -1,4 +1,3 @@
-// 1) IMPORT & INITIALIZE FIREBASE
 // script.js
 // ──────────────────────────────────────────────────────────────────────────────
 // 1) IMPORT FIREBASE
