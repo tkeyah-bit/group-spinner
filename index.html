@@ -26,16 +26,21 @@
 
   <div class="wheel-container">
    <canvas id="wheel" width="500" height="500"></canvas>
-  <div id="pointer">▼</div>
-</div>
-  <h2 id="result"></h2>
-  <div class="results-section">
+   <div id="pointer">▼</div>
+ </div>
+
+ <h2 id="result"></h2>
+
+ <div class="results-section">
    <h3>Spun Users by Group</h3>
    <div id="groupStats"></div>
    <ul id="userList"></ul>
    <button id="resetBtn" onclick="resetSpins()">Reset Spins</button>
  </div>
- </div>
- <script src="script.js"></script>
+</div>
+
+<!-- Load your logic as a module -->
+<script type="module" src="script.js" defer></script>
+
 </body>
 </html>
